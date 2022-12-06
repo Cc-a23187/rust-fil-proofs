@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 RELEASE_NAME="$CIRCLE_PROJECT_REPONAME-`uname`"
-RELEASE_FILE="/tmp/$RELEASE_NAME.tar.gz"
+RELEASE_FILE="/mnt/lotus/zhangzhichaoHome/tmp/$RELEASE_NAME.tar.gz"
 RELEASE_TAG="${CIRCLE_SHA1:0:16}"
 
 # make sure we have a token set, api requests won't work otherwise

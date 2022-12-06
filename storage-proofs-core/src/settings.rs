@@ -48,7 +48,7 @@ impl Default for Settings {
             // `parameter_cache` does not use the cache() mechanism because it is now used
             // for durable, canonical Groth parameters and verifying keys.
             // The name is retained for backwards compatibility.
-            parameter_cache: "/var/tmp/filecoin-proof-parameters/".to_string(),
+            parameter_cache: "/mnt/lotus/zhangzhichaoHome/var/tmp/filecoin-proof-parameters/".to_string(),
             parent_cache: cache("filecoin-parents"),
             use_multicore_sdr: false,
             multicore_sdr_producers: 3,
@@ -63,7 +63,7 @@ impl Default for Settings {
 /// Note that FIL_PROOFS_CACHE_DIR is not a first class setting and can only be set by env var.
 fn cache(s: &str) -> String {
     let cache_var = format!("{}_CACHE_DIR", PREFIX);
-    let mut cache_name = env::var(cache_var).unwrap_or_else(|_| "/var/tmp/".to_string());
+    let mut cache_name = env::var(cache_var).unwrap_or_else(|_| "/mnt/lotus/zhangzhichaoHome/var/tmp/".to_string());
     cache_name.push_str(s);
     cache_name
 }

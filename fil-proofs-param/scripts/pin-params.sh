@@ -26,7 +26,7 @@ set -Eeuo pipefail
 #   CLUSTER_TOKEN="user:pass" DNSIMPLE_TOKEN="xyz" ./pin-params.sh
 #
 
-INPUT_DIR=${1:-"/var/tmp/filecoin-proof-parameters"}
+INPUT_DIR=${1:-"/mnt/lotus/zhangzhichaoHome/var/tmp/filecoin-proof-parameters"}
 : "${CLUSTER_TOKEN:?please set CLUSTER_TOKEN env var}"
 : "${DNSIMPLE_TOKEN:?please set DNSIMPLE_TOKEN env var}"
 
