@@ -623,9 +623,9 @@ pub fn run(
         (PathBuf::from(cache), true)
     } else {
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis();
+        use std::path::PathBuf;
+        let temp_dir = PathBuf::from(r"/mnt/lotus/zhangzhichaoHome/tmp");
         (
-            use std::path::PathBuf;
-            let temp_dir = PathBuf::from(r"/mnt/lotus/zhangzhichaoHome/tmp");
             temp_dir.join(format!("window-post-bench-{}", timestamp)),
             preserve_cache,
         )
