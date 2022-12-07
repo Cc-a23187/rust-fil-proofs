@@ -624,7 +624,9 @@ pub fn run(
     } else {
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis();
         (
-            std::env::temp_dir().join(format!("window-post-bench-{}", timestamp)),
+            use std::path::PathBuf;
+            let temp_dir = PathBuf::from(r"/mnt/lotus/zhangzhichaoHome/tmp");
+            temp_dir.join(format!("window-post-bench-{}", timestamp)),
             preserve_cache,
         )
     };

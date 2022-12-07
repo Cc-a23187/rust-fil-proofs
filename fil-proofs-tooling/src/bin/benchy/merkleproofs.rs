@@ -74,7 +74,9 @@ pub fn run_merkleproofs_bench<Tree: 'static + MerkleTreeTrait>(
         size / std::mem::size_of::<<Tree::Hasher as Hasher>::Domain>() / tree_count;
 
     let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis();
-    let temp_path = std::env::temp_dir().join(format!("merkle-proof-bench-{}", timestamp));
+    use std::path::PathBuf;
+    let temp_dir = PathBuf::from(r"/mnt/lotus/zhangzhichaoHome/tmp");
+    let temp_path = temp_dir.join(format!("merkle-proof-bench-{}", timestamp));
     create_dir(&temp_path)?;
 
     let mut rng = thread_rng();
