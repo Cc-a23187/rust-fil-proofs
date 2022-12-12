@@ -31,6 +31,7 @@ pub mod sector;
 pub mod settings;
 pub mod test_helper;
 pub mod util;
+pub mod dizk;
 
 pub use data::Data;
 

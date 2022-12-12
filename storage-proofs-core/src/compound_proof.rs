@@ -17,13 +17,7 @@ use rayon::prelude::{
     IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelIterator,
 };
 
-use crate::{
-    error::Result,
-    multi_proof::MultiProof,
-    parameter_cache::{CacheableParameters, ParameterSetMetadata},
-    partitions::partition_count,
-    proof::ProofScheme,
-};
+use crate::{dizk, error::Result, multi_proof::MultiProof, parameter_cache::{CacheableParameters, ParameterSetMetadata}, partitions::partition_count, proof::ProofScheme};
 
 #[derive(Clone)]
 pub struct SetupParams<'a, S: ProofScheme<'a>> {
@@ -255,12 +249,14 @@ where
                 )
             })
             .collect::<Result<Vec<_>>>()?;
+        let groth_proofs =
+            dizk::dizk_function::create_dizk_proof_batch(circuits, groth_params);
 
-        let groth_proofs = if priority {
-            create_random_proof_batch_in_priority(circuits, groth_params, &mut rng)?
-        } else {
-            create_random_proof_batch(circuits, groth_params, &mut rng)?
-        };
+        // let groth_proofs = if priority {
+        //     create_random_proof_batch_in_priority(circuits, groth_params, &mut rng)?
+        // } else {
+        //     create_random_proof_batch(circuits, groth_params, &mut rng)?
+        // };
 
         groth_proofs
             .into_iter()
