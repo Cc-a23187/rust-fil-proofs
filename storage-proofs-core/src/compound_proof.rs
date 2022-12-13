@@ -235,7 +235,9 @@ where
             !vanilla_proofs.is_empty(),
             "cannot create a circuit proof over missing vanilla proofs"
         );
-
+        // println!(">>>>>>vanilla_proofs  is {:?}", vanilla_proofs.to_vec().first());
+        // println!(">>>>>>pub_input is {}", pub_in.convert());
+        println!(">>>>>>vanilla_proof is {:?}", &vanilla_proofs.len());
         let circuits = vanilla_proofs
             .into_par_iter()
             .enumerate()
@@ -252,11 +254,11 @@ where
         let groth_proofs =
             dizk::dizk_function::create_dizk_proof_batch(circuits, groth_params);
 
-        // let groth_proofs = if priority {
-        //     create_random_proof_batch_in_priority(circuits, groth_params, &mut rng)?
-        // } else {
-        //     create_random_proof_batch(circuits, groth_params, &mut rng)?
-        // };
+        let groth_proofs = if priority {
+            create_random_proof_batch_in_priority(circuits, groth_params, &mut rng)?
+        } else {
+            create_random_proof_batch(circuits, groth_params, &mut rng)?
+        };
 
         groth_proofs
             .into_iter()
