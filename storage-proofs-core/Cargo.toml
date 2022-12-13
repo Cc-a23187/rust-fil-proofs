@@ -11,6 +11,9 @@ readme = "README.md"
 [lib]
 bench = false
 
+[dependencies.pairing]
+version = "0.22"
+
 [dependencies]
 filecoin-hashers = { path = "../filecoin-hashers", version = "~7.0.0", default-features = false, features = ["sha256", "poseidon"] }
 rand = "0.8"
