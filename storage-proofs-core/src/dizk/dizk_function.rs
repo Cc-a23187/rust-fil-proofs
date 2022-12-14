@@ -1,25 +1,21 @@
-use std::fmt;
+use std::string::String;
 use std::fs::File;
-use std::io::{BufReader, Read, Write};
+use std::io::{BufReader, Write};
 use std::path::Path;
-use std::sync::Arc;
-use bellperson::{Circuit, ConstraintSystem, groth16, Index, LinearCombination, SynthesisError, Variable};
+use bellperson::{Circuit, SynthesisError};
 use bellperson::groth16::{ParameterSource, Proof, synthesize_circuits_batch};
-use blstrs::{Bls12, Scalar};
+use blstrs::Scalar;
 use ff::PrimeField;
-use rayon::prelude::*;
 use std::process::Command;
-use bellperson::multiexp::DensityTracker;
 use pairing::MultiMillerLoop;
 
 
-
-//拿到pk文件目录
-fn get_groth_params_to_prover_key(groth_params: &groth16::MappedParameters<Bls12>) -> Result<&Path, str> {
-    Ok(groth_params.param_file_path.as_path())
-}
+//拿到pk文件目录  &groth16::MappedParameters<Bls12>
+// fn get_groth_params_to_prover_key<E, C, P: ParameterSource<E>>(params: P) -> &Path {
+//     params..param_file_path.as_path()
+// }
 //写入Assignment到文件并拿到Assignment文件目录
-fn get_pub_params_to_assignment<E, C, P: ParameterSource<E>>(circuits:Vec<C>) -> Result<&Path, str>
+fn get_pub_params_to_assignment<E, C, P: ParameterSource<E>>(circuits:Vec<C>) -> Result<&Path, SynthesisError>
     where
         E: MultiMillerLoop,
         Scalar: PrimeField,
@@ -63,18 +59,19 @@ fn dizk_execute(pk_file_path: &Path, assignment_path: &Path, out_put: &Path){
 }
 
 //读取dizk prover proof文件中的A B C，转换Vec<Proof<E>
-fn read_dizk_proof<E, C, P: ParameterSource<E>>(dizk_proof_path: &Path) -> Vec<Proof<E>>
-where
+fn read_dizk_proof<E, C, P: ParameterSource<E>>(
+    dizk_proof_path: &Path
+) -> Result<Vec<Proof<E>>, SynthesisError>
+    where
     E: MultiMillerLoop,
     Scalar: PrimeField,
     C: Circuit<Scalar> + Send,
 {
     let f = File::open(dizk_proof_path)?;
     let mut reader = BufReader::new(f);
-    let mut v = Vec::new();
     let dizk_proof = Proof::read(reader)?;
-    v.push(dizk_proof);
-    return v;
+    let v: Vec<Proof<E>>  = vec![dizk_proof];
+    Ok(v)
     //fixme:可能需要修改成以下形式
     // Ok(Proof {
     // a: g_a.to_affine(),
@@ -87,17 +84,17 @@ where
 pub fn create_dizk_proof_batch<E, C, P: ParameterSource<E>>(
     circuits: Vec<C>,
     params: P,
-) -> Vec<Proof<E>>
+    pk_file_path: &Path,
+) -> Result<Vec<Proof<E>>, SynthesisError>
 where
     E: MultiMillerLoop,
     Scalar: PrimeField,
     C: Circuit<Scalar> + Send,
 {
     println!("Execute in dizk");
-    let pk_file_path = get_groth_params_to_prover_key(params)?;
-    let assignment_path = get_pub_params_to_assignment(circuits)?;
+    let assignment_path = get_pub_params_to_assignment::<E, C, P>(circuits)?;
     let out_put_path = Path::new("/mnt/lotus/zhangzhichaoHome/tmp/proof_10101429.bin");
     dizk_execute(pk_file_path, assignment_path, out_put_path);
-    return read_dizk_proof(out_put_path)
+    read_dizk_proof(out_put_path)
 }
 

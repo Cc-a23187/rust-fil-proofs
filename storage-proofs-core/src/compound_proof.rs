@@ -251,14 +251,15 @@ where
                 )
             })
             .collect::<Result<Vec<_>>>()?;
-        let groth_proofs =
-            dizk::dizk_function::create_dizk_proof_batch(circuits, groth_params);
 
-        let groth_proofs = if priority {
-            create_random_proof_batch_in_priority(circuits, groth_params, &mut rng)?
-        } else {
-            create_random_proof_batch(circuits, groth_params, &mut rng)?
-        };
+        let groth_proofs =
+            dizk::dizk_function::create_dizk_proof_batch(
+                circuits, groth_params, groth_params.param_file_path.as_path());
+        // let groth_proofs = if priority {
+        //     create_random_proof_batch_in_priority(circuits, groth_params, &mut rng)?
+        // } else {
+        //     create_random_proof_batch(circuits, groth_params, &mut rng)?
+        // };
 
         groth_proofs
             .into_iter()
