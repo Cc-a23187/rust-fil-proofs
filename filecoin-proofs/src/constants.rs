@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::sync::RwLock;
+use std::{collections::HashMap, sync::RwLockWriteGuard};
 
 pub use storage_proofs_core::drgraph::BASE_DEGREE as DRG_DEGREE;
 pub use storage_proofs_porep::stacked::EXP_DEGREE;
@@ -7,7 +7,7 @@ pub use storage_proofs_porep::stacked::EXP_DEGREE;
 use filecoin_hashers::{poseidon::PoseidonHasher, sha256::Sha256Hasher, Hasher};
 use lazy_static::lazy_static;
 use storage_proofs_core::{
-    merkle::{BinaryMerkleTree, LCTree, OctLCMerkleTree, OctMerkleTree},
+    merkle::{BinaryMerkleTree, DiskTree, LCTree},
     util::NODE_SIZE,
     MAX_LEGACY_POREP_REGISTERED_PROOF_ID,
 };
@@ -47,24 +47,47 @@ pub const PUBLISHED_SECTOR_SIZES: [u64; 10] = [
     SECTOR_SIZE_64_GIB,
 ];
 
+pub struct PorepMinimumChallenges(RwLock<HashMap<u64, usize>>);
+impl PorepMinimumChallenges {
+    fn new() -> Self {
+        Self(RwLock::new(
+            [
+                (SECTOR_SIZE_2_KIB, 2),
+                (SECTOR_SIZE_4_KIB, 2),
+                (SECTOR_SIZE_16_KIB, 2),
+                (SECTOR_SIZE_32_KIB, 2),
+                (SECTOR_SIZE_8_MIB, 2),
+                (SECTOR_SIZE_16_MIB, 2),
+                (SECTOR_SIZE_512_MIB, 2),
+                (SECTOR_SIZE_1_GIB, 2),
+                (SECTOR_SIZE_32_GIB, 176),
+                (SECTOR_SIZE_64_GIB, 176),
+            ]
+            .iter()
+            .copied()
+            .collect(),
+        ))
+    }
+
+    pub fn get_mut(&self) -> RwLockWriteGuard<'_, HashMap<u64, usize>> {
+        self.0.write().expect("POREP_MINIMUM_CHALLENGES poisoned")
+    }
+
+    pub fn from_sector_size(&self, sector_size: u64) -> usize {
+        match self
+            .0
+            .read()
+            .expect("POREP_MINIMUM_CHALLENGES poisoned")
+            .get(&sector_size)
+        {
+            Some(c) => *c,
+            None => panic!("invalid sector size"),
+        }
+    }
+}
+
 lazy_static! {
-    pub static ref POREP_MINIMUM_CHALLENGES: RwLock<HashMap<u64, u64>> = RwLock::new(
-        [
-            (SECTOR_SIZE_2_KIB, 2),
-            (SECTOR_SIZE_4_KIB, 2),
-            (SECTOR_SIZE_16_KIB, 2),
-            (SECTOR_SIZE_32_KIB, 2),
-            (SECTOR_SIZE_8_MIB, 2),
-            (SECTOR_SIZE_16_MIB, 2),
-            (SECTOR_SIZE_512_MIB, 2),
-            (SECTOR_SIZE_1_GIB, 2),
-            (SECTOR_SIZE_32_GIB, 176),
-            (SECTOR_SIZE_64_GIB, 176),
-        ]
-        .iter()
-        .copied()
-        .collect()
-    );
+    pub static ref POREP_MINIMUM_CHALLENGES: PorepMinimumChallenges = PorepMinimumChallenges::new();
     pub static ref POREP_PARTITIONS: RwLock<HashMap<u64, u8>> = RwLock::new(
         [
             (SECTOR_SIZE_2_KIB, 1),
@@ -141,9 +164,15 @@ pub type DefaultPieceDomain = <DefaultPieceHasher as Hasher>::Domain;
 pub type DefaultTreeHasher = PoseidonHasher;
 pub type DefaultTreeDomain = <DefaultTreeHasher as Hasher>::Domain;
 
+/// A binary merkle tree with Poseidon hashing, where all levels have arity 2. It's fully
+/// persisted to disk.
 pub type DefaultBinaryTree = BinaryMerkleTree<DefaultTreeHasher>;
-pub type DefaultOctTree = OctMerkleTree<DefaultTreeHasher>;
-pub type DefaultOctLCTree = OctLCMerkleTree<DefaultTreeHasher>;
+/// A merkle tree with Poseidon hashing, where all levels have arity 8. It's fully persisted to
+/// disk.
+pub type DefaultOctTree = DiskTree<DefaultTreeHasher, U8, U0, U0>;
+/// A merkle tree with Poseidon hashing, where all levels have arity 8. Some levels are not
+/// persisted to disk, but only cached in memory.
+pub type DefaultOctLCTree = LCTree<DefaultTreeHasher, U8, U0, U0>;
 
 // Generic shapes
 pub type SectorShapeBase = LCTree<DefaultTreeHasher, U8, U0, U0>;
